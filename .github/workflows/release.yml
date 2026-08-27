@@ -68,10 +68,30 @@ jobs:
         run: |
           V="${{ steps.v.outputs.version }}"
           DMG="dist/Cubby-$V.dmg"
+          # le ZIP est l'artefact que Sparkle télécharge pour mettre à jour
+          # une app déjà installée ; le DMG reste la première installation
+          ZIP="dist/Cubby-$V.zip"
           if gh release view "v$V" >/dev/null 2>&1; then
-            gh release upload "v$V" "$DMG" --clobber
+            gh release upload "v$V" "$DMG" "$ZIP" --clobber
           else
             gh release create "v$V" --title "Cubby $V" --target "$GITHUB_SHA" \
               --notes "Automated release. Open the DMG and drag Cubby into Applications. Cubby is ad-hoc signed (not notarized): on first launch, open System Settings › Privacy & Security and click Open Anyway (on macOS 14, right-click Cubby.app › Open). Requires macOS 14+." \
-              "$DMG"
+              "$DMG" "$ZIP"
           fi
+
+      # Le flux Sparkle vit sur main, dans docs/ — couvert par paths-ignore,
+      # donc ce commit ne redéclenche pas de release. On repart de origin/main
+      # pour que l'étape marche aussi depuis un tag ou un workflow_dispatch.
+      - name: Update appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          V="${{ steps.v.outputs.version }}"
+          git fetch origin main
+          git checkout -B appcast origin/main
+          python3 scripts/appcast.py "$V" "dist/Cubby-$V.zip"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/appcast.xml
+          git diff --cached --quiet || git commit -m "chore: appcast v$V"
+          git push origin appcast:main

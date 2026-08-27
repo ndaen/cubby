@@ -41,6 +41,7 @@ final class Services {
 
     func start() {
         music.start()   // poll continu → alimente l'onglet ET l'épingle latérale
+        _ = UpdaterModel.shared   // démarre la vérification de mise à jour en arrière-plan
         log("services démarrés")
     }
 

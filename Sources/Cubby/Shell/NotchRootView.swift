@@ -6,6 +6,7 @@ struct NotchRootView: View {
     @ObservedObject var music: MusicModel
     @ObservedObject var pomo: PomodoroModel
     @ObservedObject private var loc = Loc.shared
+    @ObservedObject private var updater = UpdaterModel.shared
     @AppStorage(PomodoroSettings.Keys.installed) private var showPomodoro = false
     @State private var dropTargeting = false
 
@@ -155,6 +156,23 @@ struct NotchRootView: View {
                     .help(loc.s("Unpin all", "Tout désépingler"))
                     .transition(.opacity)
                 }
+                // mise à jour disponible : une pastille qui prévient, jamais une
+                // fenêtre qui s'impose — c'est le clic qui ouvre Sparkle
+                if let version = updater.availableVersion {
+                    Button { shell.close(); updater.check() } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle.fill")
+                            Text(version)
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(.horizontal, 9).padding(.vertical, 6)
+                        .glassBG(Capsule(), tint: .cubby.opacity(0.28), interactive: true)
+                        .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(loc.s("Update Cubby to \(version)", "Mettre à jour Cubby vers \(version)"))
+                    .transition(.opacity)
+                }
                 // roue crantée : ferme l'encoche puis ouvre la fenêtre de réglages
                 Button { shell.close(); SettingsWindow.shared.show() } label: {
                     Image(systemName: "gearshape.fill")
@@ -167,6 +185,7 @@ struct NotchRootView: View {
                 .help(loc.s("Settings", "Réglages"))
             }
             .animation(.easeOut(duration: 0.18), value: shell.pinnedTab)
+            .animation(.easeOut(duration: 0.18), value: updater.availableVersion)
 
             Group {
                 switch shell.tab {

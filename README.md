@@ -42,6 +42,14 @@ Cubby is **ad-hoc signed and not notarized**, so macOS blocks it on first launch
 xattr -dr com.apple.quarantine /Applications/Cubby.app
 ```
 
+### Updates
+
+Cubby updates itself. It checks a signed [Sparkle](https://sparkle-project.org) feed in
+the background and, when a new version is out, shows a small pill next to the gear in the
+open notch — never a window that steals focus. Click it to install and relaunch, with no
+Gatekeeper prompt to go through again. Settings › General lets you check manually or turn
+the automatic check off.
+
 ### Launch at login
 
 ```sh

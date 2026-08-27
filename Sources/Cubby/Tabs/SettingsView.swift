@@ -22,6 +22,7 @@ struct SettingsRoot: View {
 // ── Général : langue ──────────────────────────────────────────────
 private struct GeneralSettings: View {
     @ObservedObject private var loc = Loc.shared
+    @ObservedObject private var updater = UpdaterModel.shared
     @AppStorage(PomodoroSettings.Keys.installed) private var showPomodoro = false
 
     var body: some View {
@@ -33,6 +34,26 @@ private struct GeneralSettings: View {
                 } label: { Text(loc.s("Interface language", "Langue de l'interface")) }
                 .pickerStyle(.segmented)
             }
+            Section(loc.s("Updates", "Mises à jour")) {
+                LabeledContent(loc.s("Installed version", "Version installée"),
+                               value: updater.currentVersion)
+                Toggle(loc.s("Check automatically", "Vérifier automatiquement"),
+                       isOn: Binding(get: { updater.automaticallyChecks },
+                                     set: { updater.automaticallyChecks = $0 }))
+                HStack {
+                    Button(loc.s("Check for updates…", "Rechercher les mises à jour…")) {
+                        updater.check()
+                    }
+                    if let version = updater.availableVersion {
+                        Text(loc.s("Cubby \(version) is available",
+                                   "Cubby \(version) est disponible"))
+                            .font(.caption).foregroundStyle(.tint)
+                    }
+                }
+            }
+            // sans bundle (swift run) il n'y a pas de flux de mise à jour à interroger
+            .disabled(!updater.isAvailable)
+
             // n'apparaît qu'une fois l'extension installée depuis le Marché
             if showPomodoro {
                 Section(loc.s("Pomodoro", "Pomodoro")) { PomodoroSettingsFields() }
