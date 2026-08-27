@@ -60,7 +60,7 @@ final class MarketModel: ObservableObject {
                   descFr: "La météo en un coup d'œil", available: false),
         Extension(id: "pomodoro", emoji: "⏱", nameEn: "Pomodoro", nameFr: "Pomodoro",
                   descEn: "A focus timer that lives in the notch",
-                  descFr: "Un minuteur de concentration dans l'encoche", available: false),
+                  descFr: "Un minuteur de concentration dans l'encoche", available: true),
         Extension(id: "calendar", emoji: "📅", nameEn: "Agenda", nameFr: "Agenda",
                   descEn: "Your next event, always visible",
                   descFr: "Ton prochain événement, toujours visible", available: false),
