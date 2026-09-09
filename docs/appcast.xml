@@ -5,5 +5,16 @@
     <link>https://raw.githubusercontent.com/ndaen/cubby-mac/main/docs/appcast.xml</link>
     <description>Updates for Cubby</description>
     <language>en</language>
+    <item>
+      <title>0.3.4</title>
+      <pubDate>Wed, 09 Sep 2026 12:15:59 GMT</pubDate>
+      <sparkle:version>0.3.4</sparkle:version>
+      <sparkle:shortVersionString>0.3.4</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/ndaen/cubby-mac/releases/tag/v0.3.4</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/ndaen/cubby-mac/releases/download/v0.3.4/Cubby-0.3.4.zip"
+                 sparkle:edSignature="XQbj6ptK6OnzIHZigrX9XE573lM/0oSYE6K1plsj9rrEuOpNmL+F4msy09z7CPR/CQJuNiqcAa8WCFRqyVdDDg==" length="1523614"
+                 type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
