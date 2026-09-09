@@ -8,6 +8,15 @@ final class NotchWindowController: NSWindowController {
     let shell: NotchShellModel
     private let stripHeight: CGFloat = 300
     private var cancellables: Set<AnyCancellable> = []
+    private var courtesyReveal: DispatchWorkItem?
+
+    // Courtoisie envers les apps qui animent l'encoche au déverrouillage
+    // (Glance et consorts) : elles dessinent sous nous — `.mainMenu + 3`
+    // contre notre `.statusBar + 8` — donc notre coquille fermée leur passe
+    // devant pile au moment de leur animation de succès. On s'efface le temps
+    // qu'elle se joue. Sans une telle app installée, personne ne voit rien :
+    // l'écran vient à peine de réapparaître.
+    private static let unlockCourtesy: TimeInterval = 0.8
 
     init(screen: NSScreen, music: MusicModel, pomo: PomodoroModel) {
         var notch = screen.notchSize
@@ -66,12 +75,35 @@ final class NotchWindowController: NSWindowController {
                 win?.ignoresMouseEvents = !wants
             }
             .store(in: &cancellables)
+
+        DistributedNotificationCenter.default()
+            .publisher(for: Notification.Name("com.apple.screenIsUnlocked"))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.yieldAfterUnlock() }
+            .store(in: &cancellables)
+    }
+
+    /// Retire la fenêtre le temps qu'une éventuelle animation de
+    /// déverrouillage se joue dans l'encoche, puis la remet.
+    private func yieldAfterUnlock() {
+        courtesyReveal?.cancel()
+        shell.close()
+        window?.orderOut(nil)
+
+        let reveal = DispatchWorkItem { [weak self] in
+            self?.window?.orderFrontRegardless()
+            self?.courtesyReveal = nil
+        }
+        courtesyReveal = reveal
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.unlockCourtesy, execute: reveal)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
     func destroy() {
+        courtesyReveal?.cancel()
+        courtesyReveal = nil
         window?.close()
         window = nil
     }
