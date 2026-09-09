@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Construit et installe Cubby.app dans /Applications (usage dev local).
 # La construction (app + DMG) est faite par package.sh, partagé avec la CI.
+# Usage : bash build-app.sh [version]   (défaut : celui de package.sh)
 set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-bash "$DIR/package.sh"
+bash "$DIR/package.sh" "$@"
 
 APP="/Applications/Cubby.app"
 rm -rf "$APP"
