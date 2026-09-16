@@ -21,7 +21,7 @@ final class MarketModel: ObservableObject {
     @Published var extensions: [Extension] = MarketModel.bundled
 
     // Publier catalog.json à cette URL rend la liste modifiable sans mettre à jour l'app.
-    private let url = URL(string: "https://raw.githubusercontent.com/ndaen/cubby-mac/main/catalog.json")!
+    private let url = URL(string: "https://raw.githubusercontent.com/ndaen/cubby/main/catalog.json")!
 
     func refresh() {
         Task {

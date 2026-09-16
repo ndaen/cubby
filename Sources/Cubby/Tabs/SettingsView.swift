@@ -166,8 +166,8 @@ private struct ExtensionRow: View {
 private struct DevelopView: View {
     @ObservedObject private var loc = Loc.shared
 
-    private let repo = "https://github.com/ndaen/cubby-mac"
-    private let newIssue = "https://github.com/ndaen/cubby-mac/issues/new"
+    private let repo = "https://github.com/ndaen/cubby"
+    private let newIssue = "https://github.com/ndaen/cubby/issues/new"
 
     private let schema = """
     {

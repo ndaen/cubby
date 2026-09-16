@@ -26,8 +26,8 @@ Cubby turns the notch (or a small strip at the top of any Mac) into a **shelf**:
 ## Install
 
 ```sh
-git clone https://github.com/ndaen/cubby-mac.git
-cd cubby-mac
+git clone https://github.com/ndaen/cubby.git
+cd cubby
 bash build-app.sh          # builds and installs /Applications/Cubby.app
 open /Applications/Cubby.app
 ```

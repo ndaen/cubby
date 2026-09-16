@@ -20,8 +20,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 APPCAST = ROOT / "docs" / "appcast.xml"
-REPO = "https://github.com/ndaen/cubby-mac"
-FEED = "https://raw.githubusercontent.com/ndaen/cubby-mac/main/docs/appcast.xml"
+REPO = "https://github.com/ndaen/cubby"
+FEED = "https://raw.githubusercontent.com/ndaen/cubby/main/docs/appcast.xml"
 KEEP = 10
 
 TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
