@@ -25,6 +25,8 @@ struct BacTabView: View {
     @StateObject private var shelf = FileShelf.shared
     @ObservedObject private var loc = Loc.shared
     @State private var targeted = false
+    @State private var previewed: ShelfItem?
+    @State private var hoverTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -47,6 +49,10 @@ struct BacTabView: View {
                 }
             }
             return true
+        }
+        .onChange(of: shelf.items) { _, items in
+            // un fichier retiré ne doit pas laisser son aperçu derrière lui
+            if let p = previewed, !items.contains(p) { hoverTask?.cancel(); previewed = nil }
         }
     }
 
@@ -76,13 +82,42 @@ struct BacTabView: View {
                 Spacer()
                 Button(loc.s("Clear", "Vider")) { shelf.clear() }.controlSize(.small).glassButton()
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(shelf.items) { item in
-                        FileChip(item: item) { shelf.remove(item) }
+            ZStack(alignment: .topLeading) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(shelf.items) { item in
+                            FileChip(item: item,
+                                     onRemove: { shelf.remove(item) },
+                                     onHover: { hover(item, $0) })
+                        }
                     }
                 }
+                .opacity(previewed == nil ? 1 : 0.28)
+
+                // L'aperçu se pose PAR-DESSUS la rangée, sans capter la souris :
+                // le survol du fichier reste actif, donc rien ne clignote. Il ne
+                // sort jamais de la fenêtre — une popover ferait fuir le pointeur
+                // hors de l'encoche, qui se refermerait toute seule.
+                if let item = previewed {
+                    FilePreviewCard(item: item)
+                        .allowsHitTesting(false)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topLeading)))
+                }
             }
+        }
+    }
+
+    // Survol d'un fichier : l'aperçu apparaît après un court délai, disparaît aussitôt.
+    private func hover(_ item: ShelfItem, _ inside: Bool) {
+        hoverTask?.cancel()
+        guard inside else {
+            withAnimation(.easeOut(duration: 0.12)) { previewed = nil }
+            return
+        }
+        hoverTask = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.16)) { previewed = item }
         }
     }
 }
@@ -90,13 +125,11 @@ struct BacTabView: View {
 struct FileChip: View {
     let item: ShelfItem
     let onRemove: () -> Void
-
-    private var icon: NSImage { NSWorkspace.shared.icon(forFile: item.url.path) }
+    let onHover: (Bool) -> Void
 
     var body: some View {
         VStack(spacing: 4) {
-            Image(nsImage: icon)
-                .resizable().frame(width: 44, height: 44)
+            ThumbnailView(url: item.url, side: 44)
             Text(item.url.lastPathComponent)
                 .font(.caption2).lineLimit(1).truncationMode(.middle)
                 .frame(width: 72)
@@ -111,7 +144,69 @@ struct FileChip: View {
             .glassButton()
             .padding(2)
         }
+        .help(item.url.lastPathComponent)
+        .onHover(perform: onHover)
         // glisser le fichier VERS une autre app (Finder, Mail…)
         .onDrag { NSItemProvider(contentsOf: item.url) ?? NSItemProvider() }
+    }
+}
+
+// Carte d'aperçu affichée au survol : grande vignette, nom complet, type et poids.
+struct FilePreviewCard: View {
+    let item: ShelfItem
+
+    private var subtitle: String {
+        let values = try? item.url.resourceValues(forKeys: [.fileSizeKey, .contentTypeKey, .isDirectoryKey])
+        let kind = values?.contentType?.localizedDescription ?? item.url.pathExtension.uppercased()
+        guard values?.isDirectory != true, let size = values?.fileSize else { return kind }
+        let weight = ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
+        return kind.isEmpty ? weight : "\(kind) — \(weight)"
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ThumbnailView(url: item.url, side: 56)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.url.lastPathComponent)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(2).truncationMode(.middle)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(subtitle)
+                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(8)
+        .frame(width: 260, alignment: .leading)
+        .glassBG(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// Vignette d'un fichier : aperçu Quick Look dès qu'il est prêt, icône système en attendant.
+struct ThumbnailView: View {
+    let url: URL
+    let side: CGFloat
+
+    @State private var thumb: NSImage?
+
+    private var fallback: NSImage { NSWorkspace.shared.icon(forFile: url.path) }
+
+    var body: some View {
+        Image(nsImage: thumb ?? fallback)
+            .resizable().scaledToFit()
+            .frame(width: side, height: side)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            // un document clair a besoin d'un bord pour exister sur fond noir
+            .overlay {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .strokeBorder(.white.opacity(thumb == nil ? 0 : 0.18), lineWidth: 0.5)
+            }
+            .task(id: url) {
+                if let known = ThumbnailCache.shared.cached(for: url, side: side) {
+                    thumb = known          // déjà connue : aucun clignotement
+                } else {
+                    thumb = await ThumbnailCache.shared.thumbnail(for: url, side: side)
+                }
+            }
     }
 }
