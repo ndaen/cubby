@@ -8,7 +8,9 @@
 
 Cubby turns the notch (or a small strip at the top of any Mac) into a **shelf**: hover to peek, click to open, drag a file onto it to stash it. It's a free, open-source, single-purpose take on the "notch hub" idea — no account, no daemon, no dependencies.
 
-*Screenshots coming soon.*
+<p align="center">
+  <a href="https://youtu.be/v7Wp-Dfz3hs"><img src="docs/video-en.jpg" width="720" alt="Watch the Cubby video on YouTube (23 s)"></a>
+</p>
 
 ## Features
 

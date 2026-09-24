@@ -23,3 +23,6 @@ dist/
 
 # Logs
 *.log
+
+# Vidéo promo (/brag) : projet Hyperframes + rendus, publiés sur YouTube
+brag-output/
