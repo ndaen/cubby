@@ -6,6 +6,17 @@
     <description>Updates for Cubby</description>
     <language>en</language>
     <item>
+      <title>0.4.1</title>
+      <pubDate>Thu, 24 Sep 2026 16:26:08 GMT</pubDate>
+      <sparkle:version>0.4.1</sparkle:version>
+      <sparkle:shortVersionString>0.4.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/ndaen/cubby/releases/tag/v0.4.1</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/ndaen/cubby/releases/download/v0.4.1/Cubby-0.4.1.zip"
+                 sparkle:edSignature="JgZZB/Rx9jA9Xd1Hngzq0e0vknTO1BtEq1Lt+DWp8tIplePh+6WcBqGbjMBEXOSh/lSNw2VEotQlpqv4FaJ3CA==" length="1557871"
+                 type="application/octet-stream"/>
+    </item>
+    <item>
       <title>0.4.0</title>
       <pubDate>Thu, 24 Sep 2026 16:21:39 GMT</pubDate>
       <sparkle:version>0.4.0</sparkle:version>
