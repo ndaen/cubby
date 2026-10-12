@@ -16,7 +16,10 @@ struct VideoTabView: View {
                     .glassBG(Capsule(), interactive: true)
                     .disabled(video.busy)
                     .onSubmit { video.start() }
-                    .onChange(of: video.input) { _, _ in video.reset() }
+                    // Seule une saisie de l'utilisateur efface le résultat précédent : le modèle vide
+                    // lui-même le champ à la fin du téléchargement, ce qui ne doit pas masquer
+                    // l'aperçu qu'il vient d'afficher.
+                    .onChange(of: video.input) { _, new in if !new.isEmpty { video.reset() } }
 
                 browserMenu
 
