@@ -38,18 +38,28 @@ struct VideoTabView: View {
 
     // Cookies d'un navigateur : pour les posts qui demandent une connexion.
     private var browserMenu: some View {
-        Menu {
+        let active = !VideoBrowser.cookieArgs(for: video.browser).isEmpty
+        return Menu {
             Picker(loc.s("Use cookies from", "Utiliser les cookies de"), selection: $video.browser) {
                 Text(loc.s("None", "Aucun")).tag("none")
+                if let d = VideoBrowser.systemDefault() {
+                    if d.browser != nil {
+                        Text(loc.s("Default browser (\(d.name))", "Navigateur par défaut (\(d.name))"))
+                            .tag(VideoBrowser.defaultChoice)
+                    } else {
+                        // ex. Arc : yt-dlp ne sait pas déchiffrer ses cookies
+                        Text(loc.s("\(d.name) — not supported", "\(d.name) — non pris en charge")).tag("unsupported").disabled(true)
+                    }
+                }
                 ForEach(VideoBrowser.installed()) { b in Text(b.displayName).tag(b.id) }
             }
             .pickerStyle(.inline)
         } label: {
-            Image(systemName: video.browser == "none" ? "person.crop.circle" : "person.crop.circle.badge.checkmark")
+            Image(systemName: active ? "person.crop.circle.badge.checkmark" : "person.crop.circle")
                 .font(.system(size: 14))
                 .padding(7)
-                .glassBG(Circle(), active: video.browser != "none", tint: .cubby.opacity(0.28), interactive: true)
-                .foregroundStyle(video.browser == "none" ? .secondary : .primary)
+                .glassBG(Circle(), active: active, tint: .cubby.opacity(0.28), interactive: true)
+                .foregroundStyle(active ? .primary : .secondary)
         }
         .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
         .fixedSize()

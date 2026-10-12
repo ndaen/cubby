@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 // Navigateur dont yt-dlp peut lire les cookies (`--cookies-from-browser`). Sert aux
 // posts qui exigent une connexion (X « contenu sensible », Instagram, Facebook privé).
@@ -29,6 +30,32 @@ enum VideoBrowser: String, CaseIterable, Identifiable {
         }
     }
 
+    // Identifiant de bundle → navigateur pris en charge par yt-dlp (nil sinon, ex. Arc).
+    static func from(bundleID: String?) -> VideoBrowser? {
+        switch bundleID {
+        case "com.apple.Safari": .safari
+        case "com.google.Chrome": .chrome
+        case "org.mozilla.firefox": .firefox
+        case "com.brave.Browser": .brave
+        case "com.microsoft.edgemac": .edge
+        case "com.vivaldi.Vivaldi": .vivaldi
+        case "com.operasoftware.Opera": .opera
+        case "org.chromium.Chromium": .chromium
+        default: nil
+        }
+    }
+
+    // Navigateur par défaut du Mac : son nom d'affichage (même non pris en charge) et,
+    // s'il l'est, l'équivalent yt-dlp.
+    static func systemDefault() -> (name: String, browser: VideoBrowser?)? {
+        guard let url = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!),
+              let bundle = Bundle(url: url) else { return nil }
+        let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? url.deletingPathExtension().lastPathComponent
+        return (name, from(bundleID: bundle.bundleIdentifier))
+    }
+
     // Installés = présents dans /Applications ou ~/Applications.
     static func installed(fileManager fm: FileManager = .default) -> [VideoBrowser] {
         let dirs = ["/Applications", fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications").path]
@@ -38,8 +65,13 @@ enum VideoBrowser: String, CaseIterable, Identifiable {
     // Arguments yt-dlp pour un identifiant enregistré ; nil / inconnu / « none » → aucun.
     // On revalide l'identifiant : une valeur UserDefaults périmée ne doit jamais devenir
     // un argument arbitraire passé au processus.
-    static func cookieArgs(for id: String?) -> [String] {
-        guard let id, let b = VideoBrowser(rawValue: id) else { return [] }
+    // « default » = navigateur par défaut du Mac, résolu à l'appel (il peut changer) ; s'il
+    // n'est pas pris en charge par yt-dlp, aucun cookie.
+    static let defaultChoice = "default"
+
+    static func cookieArgs(for id: String?, systemDefault: VideoBrowser? = VideoBrowser.systemDefault()?.browser) -> [String] {
+        let resolved = id == defaultChoice ? systemDefault : id.flatMap(VideoBrowser.init(rawValue:))
+        guard let b = resolved else { return [] }
         return ["--cookies-from-browser", b.rawValue]
     }
 }

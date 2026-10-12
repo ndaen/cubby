@@ -19,6 +19,24 @@ final class VideoBrowserTests: XCTestCase {
         XCTAssertEqual(VideoBrowser.cookieArgs(for: "netscape"), [])
     }
 
+    func testBundleIdentifierMapping() {
+        XCTAssertEqual(VideoBrowser.from(bundleID: "com.apple.Safari"), .safari)
+        XCTAssertEqual(VideoBrowser.from(bundleID: "com.google.Chrome"), .chrome)
+        XCTAssertEqual(VideoBrowser.from(bundleID: "org.mozilla.firefox"), .firefox)
+        XCTAssertNil(VideoBrowser.from(bundleID: "company.thebrowser.Browser"))   // Arc : non géré par yt-dlp
+        XCTAssertNil(VideoBrowser.from(bundleID: nil))
+    }
+
+    func testDefaultChoiceResolvesToSystemBrowser() {
+        XCTAssertEqual(VideoBrowser.cookieArgs(for: "default", systemDefault: .firefox),
+                       ["--cookies-from-browser", "firefox"])
+    }
+
+    // Navigateur par défaut non géré (Arc) : on n'envoie rien plutôt qu'un mauvais nom.
+    func testDefaultChoiceWithUnsupportedBrowserSendsNothing() {
+        XCTAssertEqual(VideoBrowser.cookieArgs(for: "default", systemDefault: nil), [])
+    }
+
     func testInstalledDetectionUsesAppBundles() throws {
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: tmp) }
