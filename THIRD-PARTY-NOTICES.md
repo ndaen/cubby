@@ -42,3 +42,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## yt-dlp
+
+The Video extension runs the official `yt-dlp_macos` binary
+(https://github.com/yt-dlp/yt-dlp), released under the Unlicense (public domain).
+The standalone binary bundles Python and other libraries under their own licences,
+listed in the project's `THIRD_PARTY_LICENSES.txt` release asset. Cubby does not
+modify it, and updates it in place from the official releases.

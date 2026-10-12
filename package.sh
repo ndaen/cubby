@@ -36,6 +36,19 @@ ditto "$FW" "$APP/Contents/Frameworks/Sparkle.framework"
 # le binaire est lié en @rpath : lui apprendre où chercher dans le bundle
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Cubby"
 
+# yt-dlp (extension Vidéo) : version épinglée + SHA-256 vérifié — on n'embarque jamais
+# un binaire non contrôlé. Pour monter de version, changer les deux lignes ensemble
+# (somme : https://github.com/yt-dlp/yt-dlp/releases/download/<tag>/SHA2-256SUMS).
+# L'app le met ensuite à jour elle-même dans Application Support.
+YTDLP_VERSION="2026.08.19"
+YTDLP_SHA256="0f192b7ec147ab6288885d6351d9ab67367640029b4377576ef46dd79cf7b202"
+echo "▸ yt-dlp ${YTDLP_VERSION}…"
+curl -fsSL -o "$APP/Contents/Resources/yt-dlp" \
+  "https://github.com/yt-dlp/yt-dlp/releases/download/$YTDLP_VERSION/yt-dlp_macos"
+echo "$YTDLP_SHA256  $APP/Contents/Resources/yt-dlp" | shasum -a 256 -c - >/dev/null \
+  || { echo "✗ SHA-256 de yt-dlp invalide."; exit 1; }
+chmod +x "$APP/Contents/Resources/yt-dlp"
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

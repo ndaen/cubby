@@ -7,12 +7,20 @@ struct NotchRootView: View {
     @ObservedObject var pomo: PomodoroModel
     @ObservedObject private var loc = Loc.shared
     @ObservedObject private var updater = UpdaterModel.shared
+    @ObservedObject private var video = VideoModel.shared
     @AppStorage(PomodoroSettings.Keys.installed) private var showPomodoro = false
+    @AppStorage(VideoModel.installedKey) private var showVideo = false
     @State private var dropTargeting = false
 
     // onglets visibles dans la barre — une extension non installée reste masquée
     private var visibleTabs: [HubTab] {
-        showPomodoro ? HubTab.allCases : HubTab.allCases.filter { $0 != .pomodoro }
+        HubTab.allCases.filter { t in
+            switch t {
+            case .pomodoro: showPomodoro
+            case .video: showVideo
+            default: true
+            }
+        }
     }
 
     private var notchSize: CGSize {
@@ -86,6 +94,9 @@ struct NotchRootView: View {
                 if shell.tab == .pomodoro { shell.tab = .bac }
                 if shell.pinnedTab == .pomodoro { shell.pinnedTab = nil }
             }
+        }
+        .onChange(of: showVideo) { _, on in
+            if !on, shell.tab == .video { shell.tab = .bac }
         }
         .onChange(of: pinActive) { _, _ in updatePinnedContentRect() }
         .onChange(of: earW) { _, _ in updatePinnedContentRect() }
@@ -192,6 +203,7 @@ struct NotchRootView: View {
                 case .bac: BacTabView()
                 case .music: MusicTabView(music: music)
                 case .pomodoro: PomodoroTabView(pomo: pomo)
+                case .video: VideoTabView(video: video)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

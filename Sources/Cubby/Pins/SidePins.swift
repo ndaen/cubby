@@ -11,7 +11,7 @@ func resolvePinTab(shell: NotchShellModel, music: MusicModel, pomo: PomodoroMode
         switch p {
         case .music: return music.available ? .music : nil
         case .pomodoro: return installed ? .pomodoro : nil
-        case .bac: return nil
+        case .bac, .video: return nil
         }
     }
     // priorité auto : un compte à rebours qui tourne prime sur la musique

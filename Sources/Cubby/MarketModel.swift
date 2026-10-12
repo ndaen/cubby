@@ -40,6 +40,7 @@ final class MarketModel: ObservableObject {
     // case HubTab + sa vue. Aucune autre modif de MarketModel.
     private let wiredFlags: [String: String] = [
         "pomodoro": PomodoroSettings.Keys.installed,
+        "video": VideoModel.installedKey,
     ]
 
     func canInstall(_ ext: Extension) -> Bool { ext.available && wiredFlags[ext.id] != nil }
@@ -61,6 +62,9 @@ final class MarketModel: ObservableObject {
         Extension(id: "pomodoro", emoji: "⏱", nameEn: "Pomodoro", nameFr: "Pomodoro",
                   descEn: "A focus timer that lives in the notch",
                   descFr: "Un minuteur de concentration dans l'encoche", available: true),
+        Extension(id: "video", emoji: "⬇️", nameEn: "Video Downloader", nameFr: "Téléchargeur vidéo",
+                  descEn: "Paste a link, get the mp4",
+                  descFr: "Colle un lien, récupère le mp4", available: true),
         Extension(id: "calendar", emoji: "📅", nameEn: "Agenda", nameFr: "Agenda",
                   descEn: "Your next event, always visible",
                   descFr: "Ton prochain événement, toujours visible", available: false),
