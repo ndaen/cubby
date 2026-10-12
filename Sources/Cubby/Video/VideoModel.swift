@@ -36,6 +36,9 @@ final class VideoModel: ObservableObject {
         state = .downloading(0)
         Task {
             do {
+                // La mise à jour passe AVANT le téléchargement, jamais en parallèle : elle
+                // réécrit le binaire et partage le même process suivi par cancel().
+                await VideoEngine.shared.updateIfStale()
                 let file = try await VideoEngine.shared.download(url) { [weak self] p in
                     Task { @MainActor in
                         guard let self, case .downloading = self.state else { return }
@@ -50,7 +53,6 @@ final class VideoModel: ObservableObject {
                 state = .failed(error.localizedDescription)
             }
         }
-        Task { await VideoEngine.shared.updateIfStale() }
     }
 
     func cancel() { VideoEngine.shared.cancel() }

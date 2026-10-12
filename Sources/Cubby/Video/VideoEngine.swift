@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 // Pilote yt-dlp : localise/installe le binaire, lance le téléchargement, relaie
 // progression et résultat. Le binaire est livré dans le bundle (signé, en lecture
@@ -18,6 +19,8 @@ enum VideoEngineError: LocalizedError {
 final class VideoEngine: @unchecked Sendable {
     static let shared = VideoEngine()
 
+    // Consultable avec : log show --last 10m --predicate 'subsystem == "com.cubby.app"'
+    private let log = Logger(subsystem: "com.cubby.app", category: "video")
     private let fm = FileManager.default
     private let lock = NSLock()
     private var process: Process?
@@ -123,12 +126,14 @@ final class VideoEngine: @unchecked Sendable {
             out.fileHandleForReading.readabilityHandler = { h in
                 for l in outBuf.appendReturningLines(String(decoding: h.availableData, as: UTF8.self)) { onLine(l) }
             }
-            p.terminationHandler = { [weak self] proc in
+            log.info("yt-dlp start: \(args.joined(separator: " "), privacy: .public)")
+            p.terminationHandler = { [weak self, log] proc in
                 out.fileHandleForReading.readabilityHandler = nil
                 err.fileHandleForReading.readabilityHandler = nil
                 // vide ce qu'il reste dans le tube avant de conclure
                 let rest = String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
                 for l in rest.split(whereSeparator: \.isNewline) { onLine(String(l)) }
+                log.info("yt-dlp exit \(proc.terminationStatus) reason \(proc.terminationReason.rawValue)\n\(errBuf.value, privacy: .public)")
                 self?.lock.lock(); self?.process = nil; self?.lock.unlock()
                 if proc.terminationReason == .uncaughtSignal {
                     cont.resume(throwing: CancellationError())
@@ -140,6 +145,7 @@ final class VideoEngine: @unchecked Sendable {
                 lock.lock(); process = p; lock.unlock()
                 try p.run()
             } catch {
+                log.error("yt-dlp launch failed: \(error.localizedDescription, privacy: .public)")
                 cont.resume(throwing: error)
             }
         }
