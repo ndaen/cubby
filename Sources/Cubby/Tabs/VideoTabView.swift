@@ -18,6 +18,8 @@ struct VideoTabView: View {
                     .onSubmit { video.start() }
                     .onChange(of: video.input) { _, _ in video.reset() }
 
+                browserMenu
+
                 if video.busy {
                     pill(loc.s("Cancel", "Annuler"), prominent: false) { video.cancel() }
                 } else {
@@ -32,6 +34,28 @@ struct VideoTabView: View {
         .padding(.horizontal, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear { video.prefillFromPasteboard() }
+    }
+
+    // Cookies d'un navigateur : pour les posts qui demandent une connexion.
+    private var browserMenu: some View {
+        Menu {
+            Picker(loc.s("Use cookies from", "Utiliser les cookies de"), selection: $video.browser) {
+                Text(loc.s("None", "Aucun")).tag("none")
+                ForEach(VideoBrowser.installed()) { b in Text(b.displayName).tag(b.id) }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Image(systemName: video.browser == "none" ? "person.crop.circle" : "person.crop.circle.badge.checkmark")
+                .font(.system(size: 14))
+                .padding(7)
+                .glassBG(Circle(), active: video.browser != "none", tint: .cubby.opacity(0.28), interactive: true)
+                .foregroundStyle(video.browser == "none" ? .secondary : .primary)
+        }
+        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+        .fixedSize()
+        .disabled(video.busy)
+        .help(loc.s("Use your browser's login for posts that need an account",
+                    "Utilise la connexion de ton navigateur pour les posts qui demandent un compte"))
     }
 
     @ViewBuilder private var status: some View {

@@ -36,6 +36,12 @@ final class VideoLinkTests: XCTestCase {
         XCTAssertEqual(YTDLPLine.parse("[download] Destination: a.mp4"), .other)
     }
 
+    func testDetectsCookieAccessDenied() {
+        XCTAssertTrue(YTDLPLine.isCookieAccessDenied(
+            "[Errno 1] Operation not permitted: '/Users/n/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies'"))
+        XCTAssertFalse(YTDLPLine.isCookieAccessDenied("[twitter] 1: Video #1 is unavailable"))
+    }
+
     func testExtractsLastErrorLine() {
         let err = "WARNING: x\nERROR: [Instagram] abc: Login required\n"
         XCTAssertEqual(YTDLPLine.errorMessage(from: err), "[Instagram] abc: Login required")

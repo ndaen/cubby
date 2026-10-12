@@ -70,7 +70,7 @@ final class VideoEngine: @unchecked Sendable {
     // MARK: - Téléchargement
 
     /// Télécharge `url` en mp4 dans Téléchargements. `onProgress` reçoit 0…1.
-    func download(_ url: URL, onProgress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    func download(_ url: URL, cookiesFrom browser: String? = nil, onProgress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         try await ensureBinary()
         let format = ffmpegDir != nil
             ? "bv*[vcodec^=avc1][ext=mp4]+ba[ext=m4a]/bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b"   // H.264 d'abord : lisible partout
@@ -83,6 +83,7 @@ final class VideoEngine: @unchecked Sendable {
             "-o", downloadsDir.appendingPathComponent("%(title).80B [%(id)s].%(ext)s").path,
         ]
         if let dir = ffmpegDir { args += ["--ffmpeg-location", dir.path] }
+        args += VideoBrowser.cookieArgs(for: browser)
         args.append(url.absoluteString)
 
         let finalPath = LockedString()

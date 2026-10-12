@@ -16,7 +16,13 @@ final class VideoModel: ObservableObject {
     // basculer ce booléen.
     static let installedKey = "cubby.showVideo"
 
+    private static let browserKey = "cubby.video.browser"
+
     @Published var input = ""
+    // Navigateur dont on emprunte les cookies ; "none" = aucun.
+    @Published var browser: String = UserDefaults.standard.string(forKey: VideoModel.browserKey) ?? "none" {
+        didSet { UserDefaults.standard.set(browser, forKey: Self.browserKey) }
+    }
     @Published private(set) var state: State = .idle
 
     var link: URL? { VideoLink.parse(input) }
@@ -39,7 +45,7 @@ final class VideoModel: ObservableObject {
                 // La mise à jour passe AVANT le téléchargement, jamais en parallèle : elle
                 // réécrit le binaire et partage le même process suivi par cancel().
                 await VideoEngine.shared.updateIfStale()
-                let file = try await VideoEngine.shared.download(url) { [weak self] p in
+                let file = try await VideoEngine.shared.download(url, cookiesFrom: browser) { [weak self] p in
                     Task { @MainActor in
                         guard let self, case .downloading = self.state else { return }
                         self.state = .downloading(p)
@@ -50,7 +56,11 @@ final class VideoModel: ObservableObject {
             } catch is CancellationError {
                 state = .idle
             } catch {
-                state = .failed(error.localizedDescription)
+                let message = error.localizedDescription
+                state = .failed(YTDLPLine.isCookieAccessDenied(message)
+                    ? Loc.shared.s("Safari blocks access to its cookies. Grant Cubby “Full Disk Access” in System Settings → Privacy & Security, or pick another browser.",
+                                   "Safari protège ses cookies. Donne l’« Accès complet au disque » à Cubby dans Réglages Système → Confidentialité et sécurité, ou choisis un autre navigateur.")
+                    : message)
             }
         }
     }

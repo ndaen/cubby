@@ -38,4 +38,5 @@ Décisions validées : moteur **yt-dlp**, interface = **nouvel onglet « Vidéo 
 - Vérifié pour de vrai : `VideoEngine` a téléchargé un mp4 H.264/AAC (ffprobe) avec progression ; un lien invalide remonte l'erreur yt-dlp lisible ; `package.sh` embarque yt-dlp (SHA-256 vérifié, `--version` OK).
 - Bug trouvé en vérifiant : `--print` rend yt-dlp muet → ajout de `--no-quiet --progress`. AV1 non lisible partout → sélecteur de format H.264 d'abord.
 - **Non vérifié** : l'onglet dans l'encoche (rendu, saisie clavier, copie depuis le bundle) et un lien Instagram/X/Facebook réel — à tester à la main sur `dist/Cubby.app`.
+- Cookies navigateur (v1.1) : menu 👤 dans l'onglet → `--cookies-from-browser`. Identifiant revalidé contre l'enum avant d'atteindre la ligne de commande. Safari sans « Accès complet au disque » → message dédié (erreur réelle reproduite). Chrome/Brave/Edge déclenchent l'invite du trousseau : non testé de bout en bout.
 - Étape 7 (README + landing) volontairement non faite : après la release.

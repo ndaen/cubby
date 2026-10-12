@@ -39,6 +39,11 @@ enum YTDLPLine: Equatable {
         return .other
     }
 
+    // Safari protège ses cookies : sans « Accès complet au disque », yt-dlp échoue avec ça.
+    static func isCookieAccessDenied(_ message: String) -> Bool {
+        message.contains("Operation not permitted") && message.localizedCaseInsensitiveContains("cookies")
+    }
+
     // Dernière ligne « ERROR: … » de stderr, lisible par un humain.
     static func errorMessage(from stderr: String) -> String? {
         stderr.split(whereSeparator: \.isNewline)
