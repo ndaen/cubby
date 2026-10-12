@@ -83,7 +83,17 @@ final class VideoEngine: @unchecked Sendable {
             "-o", downloadsDir.appendingPathComponent("%(title).80B [%(id)s].%(ext)s").path,
         ]
         if let dir = ffmpegDir { args += ["--ffmpeg-location", dir.path] }
-        args += VideoBrowser.cookieArgs(for: browser)
+        // Arc : yt-dlp ne sait pas déchiffrer ses cookies → on les exporte nous-mêmes,
+        // limités au site du lien, dans un fichier temporaire supprimé quoi qu'il arrive.
+        var cookieFile: URL?
+        defer { if let f = cookieFile { try? fm.removeItem(at: f) } }
+        if VideoBrowser.resolve(browser) == .arc {
+            cookieFile = try ChromiumCookies.exportFile(flavor: ChromiumCookies.arc,
+                                                       domains: ChromiumCookies.domains(forHost: url.host ?? ""))
+            args += ["--cookies", cookieFile!.path]
+        } else {
+            args += VideoBrowser.cookieArgs(for: browser)
+        }
         args.append(url.absoluteString)
 
         let finalPath = LockedString()

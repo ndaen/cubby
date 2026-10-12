@@ -55,6 +55,8 @@ final class VideoModel: ObservableObject {
                 input = ""
             } catch is CancellationError {
                 state = .idle
+            } catch let e as CookieExportError {
+                state = .failed(Self.message(for: e))
             } catch {
                 let message = error.localizedDescription
                 state = .failed(YTDLPLine.isCookieAccessDenied(message)
@@ -65,7 +67,28 @@ final class VideoModel: ObservableObject {
         }
     }
 
+    private static func message(for e: CookieExportError) -> String {
+        let l = Loc.shared
+        switch e {
+        case .keychainDenied:
+            return l.s("Cubby needs access to the “Arc Safe Storage” key in your Keychain to use Arc's login. Try again and click Allow.",
+                       "Cubby a besoin de la clé « Arc Safe Storage » du Trousseau pour utiliser la connexion d'Arc. Réessaie et clique sur Autoriser.")
+        case .keyNotFound:
+            return l.s("No Arc login found in the Keychain. Open Arc once, or pick another browser.",
+                       "Aucune clé Arc dans le Trousseau. Ouvre Arc une fois, ou choisis un autre navigateur.")
+        case .profileNotFound:
+            return l.s("Couldn't find Arc's cookies. Pick another browser.", "Cookies d'Arc introuvables. Choisis un autre navigateur.")
+        case .noCookiesForSite:
+            return l.s("You're not logged in to this site in Arc (no cookies found in any profile).",
+                       "Tu n'es pas connecté à ce site dans Arc (aucun cookie dans aucun profil).")
+        case .readFailed:
+            return l.s("Couldn't read Arc's cookies.", "Lecture des cookies d'Arc impossible.")
+        }
+    }
+
     func cancel() { VideoEngine.shared.cancel() }
+
+    func open(_ file: URL) { NSWorkspace.shared.open(file) }
 
     func reveal(_ file: URL) { NSWorkspace.shared.activateFileViewerSelecting([file]) }
 

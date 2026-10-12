@@ -23,7 +23,8 @@ final class VideoBrowserTests: XCTestCase {
         XCTAssertEqual(VideoBrowser.from(bundleID: "com.apple.Safari"), .safari)
         XCTAssertEqual(VideoBrowser.from(bundleID: "com.google.Chrome"), .chrome)
         XCTAssertEqual(VideoBrowser.from(bundleID: "org.mozilla.firefox"), .firefox)
-        XCTAssertNil(VideoBrowser.from(bundleID: "company.thebrowser.Browser"))   // Arc : non géré par yt-dlp
+        XCTAssertEqual(VideoBrowser.from(bundleID: "company.thebrowser.Browser"), .arc)
+        XCTAssertNil(VideoBrowser.from(bundleID: "com.example.unknown"))
         XCTAssertNil(VideoBrowser.from(bundleID: nil))
     }
 
@@ -32,7 +33,15 @@ final class VideoBrowserTests: XCTestCase {
                        ["--cookies-from-browser", "firefox"])
     }
 
-    // Navigateur par défaut non géré (Arc) : on n'envoie rien plutôt qu'un mauvais nom.
+    // Arc n'est pas lu par yt-dlp : aucun argument, l'export passe par un fichier de cookies.
+    func testArcUsesNoNativeCookieArguments() {
+        XCTAssertEqual(VideoBrowser.cookieArgs(for: "arc"), [])
+        XCTAssertEqual(VideoBrowser.resolve("arc"), .arc)
+        XCTAssertEqual(VideoBrowser.resolve("default", systemDefault: .arc), .arc)
+        XCTAssertNil(VideoBrowser.arc.ytdlpName)
+    }
+
+    // Navigateur par défaut non reconnu : on n'envoie rien plutôt qu'un mauvais nom.
     func testDefaultChoiceWithUnsupportedBrowserSendsNothing() {
         XCTAssertEqual(VideoBrowser.cookieArgs(for: "default", systemDefault: nil), [])
     }

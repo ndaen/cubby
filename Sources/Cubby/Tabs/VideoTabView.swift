@@ -38,18 +38,13 @@ struct VideoTabView: View {
 
     // Cookies d'un navigateur : pour les posts qui demandent une connexion.
     private var browserMenu: some View {
-        let active = !VideoBrowser.cookieArgs(for: video.browser).isEmpty
+        let active = VideoBrowser.resolve(video.browser) != nil
         return Menu {
             Picker(loc.s("Use cookies from", "Utiliser les cookies de"), selection: $video.browser) {
                 Text(loc.s("None", "Aucun")).tag("none")
-                if let d = VideoBrowser.systemDefault() {
-                    if d.browser != nil {
-                        Text(loc.s("Default browser (\(d.name))", "Navigateur par défaut (\(d.name))"))
-                            .tag(VideoBrowser.defaultChoice)
-                    } else {
-                        // ex. Arc : yt-dlp ne sait pas déchiffrer ses cookies
-                        Text(loc.s("\(d.name) — not supported", "\(d.name) — non pris en charge")).tag("unsupported").disabled(true)
-                    }
+                if let d = VideoBrowser.systemDefault(), d.browser != nil {
+                    Text(loc.s("Default browser (\(d.name))", "Navigateur par défaut (\(d.name))"))
+                        .tag(VideoBrowser.defaultChoice)
                 }
                 ForEach(VideoBrowser.installed()) { b in Text(b.displayName).tag(b.id) }
             }
@@ -82,12 +77,20 @@ struct VideoTabView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         case .done(let file):
-            HStack(spacing: 10) {
-                Label(file.lastPathComponent, systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1).truncationMode(.middle)
+            HStack(spacing: 12) {
+                Button { video.open(file) } label: { VideoThumb(file: file) }
+                    .buttonStyle(.plain)
+                    .help(loc.s("Open the video", "Ouvrir la vidéo"))
+                VStack(alignment: .leading, spacing: 8) {
+                    Label(file.lastPathComponent, systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .lineLimit(2).truncationMode(.middle)
+                    HStack(spacing: 8) {
+                        pill(loc.s("Open", "Ouvrir"), prominent: true) { video.open(file) }
+                        pill(loc.s("Show in Finder", "Afficher dans le Finder"), prominent: false) { video.reveal(file) }
+                    }
+                }
                 Spacer(minLength: 0)
-                pill(loc.s("Show in Finder", "Afficher dans le Finder"), prominent: false) { video.reveal(file) }
             }
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")
@@ -104,5 +107,33 @@ struct VideoTabView: View {
                 .glassBG(Capsule(), tint: prominent ? .cubby.opacity(0.28) : nil, interactive: true)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// Aperçu de la vidéo téléchargée (image Quick Look, icône du fichier en repli).
+private struct VideoThumb: View {
+    let file: URL
+    @State private var image: NSImage?
+    private let width: CGFloat = 112, height: CGFloat = 66
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 9).fill(Color.white.opacity(0.08))
+            if let image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                ProgressView().controlSize(.small)
+            }
+            Image(systemName: "play.fill")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white.opacity(0.9))
+                .shadow(radius: 3)
+        }
+        .frame(width: width, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: 9))
+        .task(id: file) {
+            image = ThumbnailCache.shared.cached(for: file, side: 160)
+            if image == nil { image = await ThumbnailCache.shared.thumbnail(for: file, side: 160) }
+        }
     }
 }

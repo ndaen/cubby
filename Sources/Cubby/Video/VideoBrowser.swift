@@ -5,7 +5,7 @@ import AppKit
 // posts qui exigent une connexion (X « contenu sensible », Instagram, Facebook privé).
 // `id` est exactement le nom attendu par yt-dlp.
 enum VideoBrowser: String, CaseIterable, Identifiable {
-    case safari, chrome, firefox, brave, edge, vivaldi, opera, chromium
+    case safari, chrome, firefox, brave, edge, vivaldi, opera, chromium, arc
     var id: String { rawValue }
 
     var displayName: String {
@@ -18,8 +18,12 @@ enum VideoBrowser: String, CaseIterable, Identifiable {
         case .vivaldi: "Vivaldi"
         case .opera: "Opera"
         case .chromium: "Chromium"
+        case .arc: "Arc"
         }
     }
+
+    // Arc n'est pas connu de yt-dlp : ses cookies passent par `ChromiumCookies` (fichier temporaire).
+    var ytdlpName: String? { self == .arc ? nil : rawValue }
 
     var appName: String {
         switch self {
@@ -41,6 +45,7 @@ enum VideoBrowser: String, CaseIterable, Identifiable {
         case "com.vivaldi.Vivaldi": .vivaldi
         case "com.operasoftware.Opera": .opera
         case "org.chromium.Chromium": .chromium
+        case "company.thebrowser.Browser": .arc
         default: nil
         }
     }
@@ -69,9 +74,13 @@ enum VideoBrowser: String, CaseIterable, Identifiable {
     // n'est pas pris en charge par yt-dlp, aucun cookie.
     static let defaultChoice = "default"
 
+    static func resolve(_ id: String?, systemDefault: VideoBrowser? = VideoBrowser.systemDefault()?.browser) -> VideoBrowser? {
+        id == defaultChoice ? systemDefault : id.flatMap(VideoBrowser.init(rawValue:))
+    }
+
+    // Arguments pour les navigateurs que yt-dlp lit lui-même (Arc : voir `resolve` + export).
     static func cookieArgs(for id: String?, systemDefault: VideoBrowser? = VideoBrowser.systemDefault()?.browser) -> [String] {
-        let resolved = id == defaultChoice ? systemDefault : id.flatMap(VideoBrowser.init(rawValue:))
-        guard let b = resolved else { return [] }
-        return ["--cookies-from-browser", b.rawValue]
+        guard let name = resolve(id, systemDefault: systemDefault)?.ytdlpName else { return [] }
+        return ["--cookies-from-browser", name]
     }
 }
