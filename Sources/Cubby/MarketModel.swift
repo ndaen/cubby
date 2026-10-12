@@ -29,7 +29,7 @@ final class MarketModel: ObservableObject {
                   let cat = try? JSONDecoder().decode(Catalog.self, from: data),
                   !cat.extensions.isEmpty
             else { return }               // hors-ligne / pas encore publié → on garde le repli
-            extensions = cat.extensions
+            extensions = Self.merged(remote: cat.extensions, local: Self.bundled, wired: Set(wiredFlags.keys))
         }
     }
 
@@ -42,6 +42,14 @@ final class MarketModel: ObservableObject {
         "pomodoro": PomodoroSettings.Keys.installed,
         "video": VideoModel.installedKey,
     ]
+
+    // Le catalogue distant fait foi pour les id qu'il connaît, mais il ne peut pas retirer
+    // une extension câblée dans ce binaire : sans ça, une extension livrée avant la
+    // publication de catalog.json disparaîtrait de la marketplace au premier refresh.
+    nonisolated static func merged(remote: [Extension], local: [Extension], wired: Set<String>) -> [Extension] {
+        let known = Set(remote.map(\.id))
+        return remote + local.filter { wired.contains($0.id) && !known.contains($0.id) }
+    }
 
     func canInstall(_ ext: Extension) -> Bool { ext.available && wiredFlags[ext.id] != nil }
     func isInstalled(_ ext: Extension) -> Bool {
