@@ -62,6 +62,7 @@ final class NotchWindowController: NSWindowController {
             width: notch.width, height: notch.height
         )
         shell.screenRect = screen.frame
+        MenuBarProbe.shared.attach(screen)
 
         win.orderFrontRegardless()
 

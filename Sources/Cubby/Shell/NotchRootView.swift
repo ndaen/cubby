@@ -8,6 +8,7 @@ struct NotchRootView: View {
     @ObservedObject private var loc = Loc.shared
     @ObservedObject private var updater = UpdaterModel.shared
     @ObservedObject private var video = VideoModel.shared
+    @ObservedObject private var menuBar = MenuBarProbe.shared
     @AppStorage(PomodoroSettings.Keys.installed) private var showPomodoro = false
     @AppStorage(VideoModel.installedKey) private var showVideo = false
     @State private var dropTargeting = false
@@ -50,7 +51,17 @@ struct NotchRootView: View {
     }
     // onglet épinglé/résolu à afficher sur les flancs (nil = rien)
     private var pinTab: HubTab? { resolvePinTab(shell: shell, music: music, pomo: pomo) }
-    private var pinActive: Bool { pinTab != nil && shell.status != .opened }
+    private var pinActive: Bool {
+        pinTab != nil && shell.status != .opened && (earsFit || shell.status == .popping)
+    }
+    // les oreilles ne restent affichées que si elles ne masquent ni menu ni icône
+    // de la barre ; sinon (ou faute d'autorisation Accessibilité) : au survol seulement
+    private var earsFit: Bool {
+        guard let items = menuBar.items else { return false }
+        let notch = shell.deviceNotchRect
+        return !MenuBarLayout.earsBlocked(notch: notch.minX...notch.maxX, ear: earW + topRadius,
+                                          menus: items.menus, extras: items.extras)
+    }
     // extension noire de chaque côté quand une épingle est active
     private var sideExtra: CGFloat { pinActive ? earW : 0 }
 
@@ -70,7 +81,7 @@ struct NotchRootView: View {
                     .transition(.opacity)
             } else {
                 // contenu des épingles posé dans les marges noires latérales
-                SidePins(shell: shell, music: music, pomo: pomo, pinTab: pinTab,
+                SidePins(shell: shell, music: music, pomo: pomo, pinTab: pinActive ? pinTab : nil,
                          notchWidth: notchSize.width, earW: earW,
                          notchHeight: shell.deviceNotchRect.height)
                     .animation(shell.animation, value: pinActive)
@@ -100,7 +111,11 @@ struct NotchRootView: View {
         }
         .onChange(of: pinActive) { _, _ in updatePinnedContentRect() }
         .onChange(of: earW) { _, _ in updatePinnedContentRect() }
-        .onAppear { updatePinnedContentRect() }
+        .onChange(of: pinTab != nil) { _, wanted in menuBar.active = wanted }
+        .onAppear {
+            menuBar.active = pinTab != nil
+            updatePinnedContentRect()
+        }
         .preferredColorScheme(.dark)
     }
 

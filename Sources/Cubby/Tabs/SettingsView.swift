@@ -23,6 +23,7 @@ struct SettingsRoot: View {
 private struct GeneralSettings: View {
     @ObservedObject private var loc = Loc.shared
     @ObservedObject private var updater = UpdaterModel.shared
+    @ObservedObject private var menuBar = MenuBarProbe.shared
     @AppStorage(PomodoroSettings.Keys.installed) private var showPomodoro = false
 
     var body: some View {
@@ -53,6 +54,20 @@ private struct GeneralSettings: View {
             }
             // sans bundle (swift run) il n'y a pas de flux de mise à jour à interroger
             .disabled(!updater.isAvailable)
+
+            Section(loc.s("Notch", "Encoche")) {
+                LabeledContent(loc.s("Keep pins visible", "Épingles toujours visibles")) {
+                    if menuBar.trusted {
+                        Label(loc.s("Allowed", "Autorisé"), systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.tint)
+                    } else {
+                        Button(loc.s("Allow…", "Autoriser…")) { menuBar.requestAccess() }
+                    }
+                }
+                Text(loc.s("Cubby reads where menus and icons sit in the menu bar (Accessibility access) so pins never hide them. Without it, pins only show when you hover the notch.",
+                           "Cubby lit la position des menus et des icônes de la barre (accès Accessibilité) pour que les épingles ne les masquent jamais. Sans cet accès, elles n'apparaissent qu'au survol de l'encoche."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
 
             // n'apparaît qu'une fois l'extension installée depuis le Marché
             if showPomodoro {

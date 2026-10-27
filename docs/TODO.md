@@ -1,3 +1,27 @@
+# TODO — épingles qui ne masquent plus la barre de menus
+
+Constat : avec une épingle active, les oreilles noires (~41 pt de chaque côté de l'encoche) recouvrent
+des menus d'app (ex. « Window » de WebStorm, renvoyé à droite de l'encoche par macOS) et des icônes de statut.
+Décision validée : **détection automatique via l'API Accessibilité** ; sans autorisation → épingles au survol seulement.
+
+- [x] **1. Logique pure + tests** — `MenuBarLayout.earsBlocked` : chevauchement oreilles / menus / icônes
+  (les icônes à gauche de l'encoche sont celles que macOS masque en débordement → ignorées).
+- [x] **2. Sonde AX** — `MenuBarProbe` : lit en tâche de fond `AXMenuBar` de l'app au premier plan + `AXExtrasMenuBar`
+  de chaque app (timeout court), toutes les 2 s tant qu'une épingle est voulue, et à chaque changement d'app active.
+- [x] **3. Vue** — `NotchRootView` : oreilles affichées seulement si elles tiennent, sinon au survol ;
+  le survol reste actif tant que la souris est sur les oreilles (play/pause cliquable).
+- [x] **4. Réglages** — section « Encoche » : état de l'autorisation Accessibilité + bouton pour l'accorder.
+- [x] **5. Vérification** : `swift test`, build, test réel WebStorm (menu Window) et Messages.
+
+### Review
+- Tests : `swift test` → 42 verts (6 nouveaux sur `MenuBarLayout`, cotes relevées sur la machine).
+- Vérifié en réel (build de dev, captures dans `.claude/screenshots/playwright/menubar-*.png`) :
+  WebStorm → « Git » et « Window » redeviennent visibles ; Messages → le chevron « « » à droite de l'encoche aussi ;
+  au survol de l'encoche, les épingles réapparaissent.
+- Bug trouvé en vérifiant : le contenu de l'épingle (pochette, play) restait dessiné sans son fond noir → `SidePins` suit maintenant `pinActive`.
+- **Limite** : signature ad-hoc → l'autorisation Accessibilité est liée au hash du binaire et sera probablement
+  à redonner après chaque mise à jour Sparkle (repli : épingles au survol). Une signature Developer ID réglerait ça.
+
 # TODO — extension « Vidéo » (téléchargeur de liens → mp4)
 
 Décisions validées : moteur **yt-dlp**, interface = **nouvel onglet « Vidéo »** (pas de drag & drop de lien sur l'encoche).

@@ -145,7 +145,9 @@ final class NotchShellModel: ObservableObject {
                 case .closed:
                     if hit(m) { pop() }
                 case .popping:
-                    if !hit(m) { close() }
+                    // les épingles peuvent n'apparaître qu'au survol : on les
+                    // laisse ouvertes le temps d'aller cliquer dessus
+                    if !hit(m), !pinnedContentRect.contains(m) { close() }
                 case .opened:
                     // ferme après un délai si la souris reste hors du panneau
                     if openedRect.insetBy(dx: -24, dy: -24).contains(m) {
