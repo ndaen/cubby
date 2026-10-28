@@ -1,3 +1,27 @@
+# TODO — landing : style inspiré de raycast.com (lots 1 + 2)
+
+Décisions validées : lots 1 et 2 ; CSS commun extrait dans `docs/site.css` (EN et FR ne gardent que le HTML/JS).
+Règles : lumière seulement depuis l'encoche / le haut, seule l'encoche bouge, ambre = unique accent, pas de mono.
+
+- [x] **0. Captures « avant »** (1280 / 390, FR) dans `.claude/screenshots/playwright/`.
+- [x] **1. `docs/site.css`** — extraire le `<style>` commun, tokens (`--dim`, `--amber-glow`, `--hl`, rayons, `--ease-out`), CSS mort supprimé, `:focus-visible` / `::selection` ambre, `theme-color`, reduced-motion unifié.
+- [x] **2. Boutons façon touche** — `.btn-primary`, `.btn-ghost`, contrôles de la démo (`:active` enfoncé), icônes dans le closing.
+- [x] **3. Surfaces** — hairline interne sur `.card` / `.step` / `.note`, filets fondus sur `.claims`, bordure dégradée du closing.
+- [x] **4. Hero** — entrée échelonnée courte (h1 fixe), éclat unique autour du badge (`@property`).
+- [x] **5. CTA plateforme** — non-Mac → « Cubby est fait pour Mac ».
+- [x] **6. Install & hint** — fil d'Ariane des Réglages façon macOS, « Touchez » sous `hover:none`.
+- [x] **7. Textes** — eyebrow ambre, « zénith de widgets » corrigé.
+- [x] **8. Stage MacBook** — bezel autour de `.stage`, cône de lumière depuis l'encoche, `is-lit` à l'ouverture.
+- [x] **9. Closing mascotte** — encoche SVG avec yeux, clignement + allumage à l'entrée dans l'écran.
+- [x] **10. Légende cliquable** — 3 boutons sous le stage qui ouvrent l'onglet correspondant.
+- [x] **11. Vérification** — captures après (1280 / 390, reduced-motion), console sans erreur, démo fonctionnelle, EN = FR. Reste : passage Safari/WebKit (non testé).
+
+### Review
+- Chromium : FR/EN à 1280, 390 et 320–660 px (panneau ouvert dans le stage à toutes les largeurs), reduced-motion, tactile émulé, clavier ; console et réseau propres.
+- Corrigé après revue : contraste `--dim`/hint, `inert` sur le panneau fermé, paliers `--s` sous 405 px, hint centré, légende au clic seulement (le focus clavier ne change plus d'onglet, WCAG 3.2.1).
+- Captures avant/après : `.claude/screenshots/playwright/landing-before-*` / `landing-after-*`.
+- **Non vérifié** : Safari/WebKit (`@property`, masque de l'éclat du badge, `inert`, soulignement de la légende).
+
 # TODO — épingles qui ne masquent plus la barre de menus
 
 Constat : avec une épingle active, les oreilles noires (~41 pt de chaque côté de l'encoche) recouvrent
